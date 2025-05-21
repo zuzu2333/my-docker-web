@@ -17,3 +17,16 @@ jobs:
 
     - name: Build Docker image
       run: docker build -t my-docker-web .
+
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          docker stop my-docker-web || true
+          docker rm my-docker-web || true
+          docker pull nginx
+          echo '<h1>Hello from auto-deploy!</h1>' > index.html
+          docker run -d -p 80:80 -v $(pwd)/index.html:/usr/share/nginx/html/index.html --name my-docker-web nginx
